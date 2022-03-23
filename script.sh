@@ -44,21 +44,21 @@ sed -i -e 's/ident/md5/' /var/lib/pgsql/12/data/pg_hba.conf
 systemctl reload postgresql-12
 		
 #--- Creating a User and DB on the PostgreSQL
-sudo su postgres -c "psql -c \"CREATE USER zabbix5 WITH PASSWORD 'zbx#2022'\" "
+sudo su postgres -c "psql -c \"CREATE USER zabbix5 WITH PASSWORD 'zbx#zbx'\" "
 sudo su postgres -c "psql -c \"CREATE DATABASE zabbix5\" "
 sudo su postgres -c "psql -c \"GRANT ALL ON DATABASE zabbix5 TO zabbix5\" "
 
 #--- Altering password User postgres
-sudo su postgres -c "psql -c \"ALTER USER postgres PASSWORD 'suporte#2022'\" "
+sudo su postgres -c "psql -c \"ALTER USER postgres PASSWORD 'zabbix#zabbix'\" "
 
 #--- Installing repo Zabbix 5 and essentials packages
 rpm -ivh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
 yum install -y zabbix-server-pgsql zabbix-agent fping net-snmp net-snmp-utils
 
 #--- Populating database zabbix5
-zcat /usr/share/doc/zabbix-server-pgsql*/create.sql.gz | psql -h 127.0.0.1 -U zabbix5 -W 'zbx#2022'
+zcat /usr/share/doc/zabbix-server-pgsql*/create.sql.gz | psql -h 127.0.0.1 -U zabbix5 -W 'zbx#zbx'
 
 #--- Editing file zabbix_server.conf
 sed -i -e 's/DBName=zabbix/DBName=zabbix5/' /etc/zabbix/zabbix_server.conf
 sed -i -e 's/DBUser=zabbix/DBUser=zabbix5/' /etc/zabbix/zabbix_server.conf
-sed -i -e 's/DBPassword=zabbix/DBPassword=zbx#2022/' /etc/zabbix/zabbix_server.conf
+sed -i -e 's/DBPassword=zabbix/DBPassword=zbx#zbx/' /etc/zabbix/zabbix_server.conf
