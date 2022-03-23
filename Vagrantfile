@@ -1,20 +1,20 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-server = {
-	'zabbix' => {'ip' => '192.168.200.10', 'memory' => '2048', 'cpus' => '1', 'disk' => 'D:\"virtualbox vms"\zabbix\data.vdi'}
+servers = {
+	'zabbix-vagrant' => {'ip' => '192.168.200.10', 'memory' => '2048', 'cpus' => '1', 'disk' => 'D:\VirtualBox VMs\vagrant-zabbix\dados.vdi'}
 }
 
 Vagrant.configure("2") do |config|
 
 	#--- Customizing Vagrant Box in Vagrant Cloud
-	server.each do | name, conf|
+	servers.each do |name, conf|
 		config.vm.define "#{name}" do |cfg|
 			cfg.vm.box = "onobrerodrigo/centos-7-x86_64-minimal-2009"
 			cfg.vm.box_version = "1.0.0"
 			cfg.vm.box_check_update = true
-			cfg.vm.box.hostname = "#{name}.#{conf['ip']}.nip.io"
-			cfg.vm.network = "private_network", ip: "#{conf['ip']}"
+			cfg.vm.hostname = "#{name}.#{conf['ip']}.nip.io"
+			cfg.vm.network "private_network", ip: "#{conf['ip']}"
 			cfg.vm.provision :hosts, :sync_hosts => true
 
 			#--- Disable auto update vbguest
@@ -22,24 +22,25 @@ Vagrant.configure("2") do |config|
 
 			#--- Customizing Hardware on provider
 			cfg.vm.provider "virtualbox" do |vb|
-				vb.name = "#{conf['name']}"
+				vb.name = "#{name}"
 				vb.gui = false
 				vb.cpus = "#{conf['cpus']}"
 				vb.memory = "#{conf['memory']}"
 
-				#--- Add second disk with 40GB. Define the variable named 'disk'. e.g. 'disk' => 'D:\"virtualbox vms"\zabbix\data.vdi'
-				vb.customize ['createhd', '--filename', "#{conf['disk']}"], '--size', 40 * 1024]
-				vb.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 1, '--device' 0, '--type', 'hdd', 'medium', "#{conf['disk']}"]
-		   	end
+				#--- Add second disk with 40GB. Define the variable named 'disk'. e.g. 'disk' => 'D:\VirtualBox VMs\vagrant-zabbix\dados.vdi'
+				vb.customize ['createhd', '--filename', "#{conf['disk']}", '--size', 40 * 1024]
+                vb.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', "#{conf['disk']}"]
+            end
 
 			cfg.vm.provision "shell", inline: <<-SHELL
 				#--- Configuring the second disk "data"
 				sudo parted --script --align optimal /dev/sdb mklabel gpt -- mkpart primary ext4 0% 100%
-				sudo mkfs --type ext4 /dev/sbd1
+                sudo mkfs --type ext4 /dev/sdb1
 				sudo mkdir /mnt/data
 				sudo mount --types ext4 /dev/sdb1 /mnt/data
 				sudo su -c "echo 'dev/sdb1 /mnt/data ext4 defaults 0 0 ' >> /etc/fstab"
-				#--- Updating all packages to their latest version
+				
+                #--- Updating all packages to their latest version
     			sudo yum update && sudo yum upgrade -y
 
 				#--- Installing default packages to the Server
@@ -50,14 +51,14 @@ Vagrant.configure("2") do |config|
 
 				#--- Disabling selinux
 				sudo setenforce 0
-				sudo sed -i --follow-symlinks's/SELINUX=enforcing/SELINUX=disabled/g'/etc/sysconfig/selinux
+				sudo sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux
 				
 				#-- Disabling firewalld
 				systemctl disable firewalld && systemctl stop firewalld
 
 				#--- Intalling PHP
 				yum install -y http://rpms.remirepo.net/enterprise/remi-release-7.rpm && yum-config-manager --enable remi-php73 && yum update -y
-				yum install -y php73-php{gd,fpm,ldap,xml,mbstring,pgsql,bcmatch,php73}
+				yum install -y php73 php73-php-{gd,fpm,ldap,xml,mbstring,pgsql,bcmath}
 				
 				#--- Installing Python3
 				sudo yum install -y python3
