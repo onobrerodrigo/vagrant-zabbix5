@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 servers = {
-	'zabbix-vagrant' => {'ip' => '192.168.200.10', 'memory' => '2048', 'cpus' => '1', 'disk' => 'D:\VirtualBox VMs\vagrant-zabbix\dados.vdi'}
+	'vagrant-zbx5' => {'ip' => '192.168.200.10', 'memory' => '2048', 'cpus' => '1', 'disk' => 'D:\VirtualBox VMs\vagrant-zbx5\storage.vdi'}
 }
 
 Vagrant.configure("2") do |config|
@@ -28,7 +28,7 @@ Vagrant.configure("2") do |config|
 				vb.cpus = "#{conf['cpus']}"
 				vb.memory = "#{conf['memory']}"
 
-				#--- Add second disk with 40GB. Define the variable named 'disk'. e.g. 'disk' => 'D:\VirtualBox VMs\vagrant-zabbix\dados.vdi'
+				#--- Add second disk with 40GB. Define the variable named 'disk'. e.g. 'disk' => 'D:\VirtualBox VMs\vagrant-zbx5\storage.vdi'
 				vb.customize ['createhd', '--filename', "#{conf['disk']}", '--size', 40 * 1024]
                 vb.customize ['storageattach', :id, '--storagectl', 'SATA', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', "#{conf['disk']}"]
 				

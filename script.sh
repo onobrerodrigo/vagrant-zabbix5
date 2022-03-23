@@ -3,8 +3,8 @@
 #--- Configuring the second disk "data"
 sudo parted --script --align optimal /dev/sdb mklabel gpt -- mkpart primary ext4 0% 100%
 sudo mkfs --type ext4 /dev/sdb1
-sudo mkdir /mnt/data
-sudo mount --types ext4 /dev/sdb1 /mnt/data
+sudo mkdir /mnt/storage
+sudo mount --types ext4 /dev/sdb1 /mnt/storage
 sudo su -c "echo 'dev/sdb1 /mnt/data ext4 defaults 0 0 ' >> /etc/fstab"
 			
 #--- Updating all packages to their latest version
@@ -43,6 +43,9 @@ systemctl start postgresql-12
 sed -i -e 's/ident/md5/' /var/lib/pgsql/12/data/pg_hba.conf
 systemctl reload postgresql-12
 		
+#--- Create Role and User vagrant
+sudo su postgres -c "psql -c \"CREATE ROLE vagrant SUPERUSER LOGIN PASSWORD 'vagrant'\" "
+
 #--- Creating a User and DB on the PostgreSQL
 sudo su postgres -c "psql -c \"CREATE USER zabbix5 WITH PASSWORD 'zbx#zbx'\" "
 sudo su postgres -c "psql -c \"CREATE DATABASE zabbix5\" "
@@ -53,7 +56,7 @@ rpm -ivh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.e
 yum install -y zabbix-server-pgsql zabbix-agent fping net-snmp net-snmp-utils
 
 #--- Populating database zabbix5
-zcat /usr/share/doc/zabbix-server-pgsql*/create.sql.gz | psql -h 127.0.0.1 -U zabbix5
+zcat /usr/share/doc/zabbix-server-pgsql*/create.sql.gz | psql -h 127.0.0.1 -U zabbix5 -W zbx#zbx
 
 #--- Editing file zabbix_server.conf
 sed -i -e 's/DBName=zabbix/DBName=zabbix5/' /etc/zabbix/zabbix_server.conf
